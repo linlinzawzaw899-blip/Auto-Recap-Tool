@@ -122,21 +122,21 @@
     <h2>ဖိုင် ၂ ခု တင်ပါ</h2>
     <div class="hint">မူရင်း Video ဖိုင်နှင့် ထည့်လိုသော အသံဖိုင် (voice-over / soundtrack) ကို ရွေးချယ်ပါ။</div>
     <div class="drop-row">
-      <div class="dropzone" id="dzVideo">
+      <label class="dropzone" id="dzVideo" for="videoInput">
         <div class="label">🎬 မူရင်း Video ဖိုင်</div>
-        <div class="sub">MP4 / WebM / MOV</div>
+        <div class="sub">MP4 / WebM / MOV — နှိပ်၍ ရွေးပါ</div>
         <div class="filename" id="videoFileName"></div>
         <canvas class="wave" id="videoWave" style="display:none"></canvas>
         <input type="file" id="videoInput" accept="video/*,.mp4,.mov,.webm,.mkv,.avi">
-      </div>
-      <div class="dropzone" id="dzAudio">
+      </label>
+      <label class="dropzone" id="dzAudio" for="audioInput">
         <div class="label">🎙️ အသံဖိုင်</div>
-        <div class="sub">MP3 / WAV / M4A</div>
+        <div class="sub">MP3 / WAV / M4A — နှိပ်၍ ရွေးပါ</div>
         <div class="filename" id="audioFileName"></div>
         <div class="tc" id="audioAnalyzeStatus" style="margin-top:4px;"></div>
         <canvas class="wave" id="audioWave" style="display:none"></canvas>
         <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.wma">
-      </div>
+      </label>
     </div>
     <div class="legend">
       <span><i class="dot" style="background:var(--amber)"></i> Video ၏ မူရင်းအသံလှိုင်း</span>
@@ -221,7 +221,7 @@
 
   function wireDropzone(dzId, inputId, onFile){
     const dz = $(dzId), input = $(inputId);
-    dz.addEventListener('click', ()=>input.click());
+    // dz is a <label for=...> so tapping it natively opens the picker — no JS click() needed (avoids an iOS Safari/Chrome bug where display:none inputs don't open via .click()).
     dz.addEventListener('dragover', e=>{e.preventDefault(); dz.style.borderColor='var(--amber-dim)';});
     dz.addEventListener('dragleave', ()=>{dz.style.borderColor='';});
     dz.addEventListener('drop', e=>{
