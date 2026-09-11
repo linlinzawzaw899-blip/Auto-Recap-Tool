@@ -3,555 +3,372 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto Recap — Video ပေါင်းစပ်ကိရိယာ</title>
+<title>Video + Audio ပေါင်းစပ်ကိရိယာ</title>
 <style>
   :root{
-    --bg:        #17140F;
-    --panel:     #221D16;
-    --panel-2:   #2B241A;
-    --line:      #3A3025;
-    --text:      #EFE8DA;
-    --text-dim:  #A89B85;
-    --amber:     #E8944A;
-    --amber-dim: #8A5A2C;
-    --teal:      #5FB8B0;
-    --teal-dim:  #33625C;
-    --red:       #D86A5C;
-    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Consolas", monospace;
-    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --bg1:#0f1224;
+    --bg2:#1a1f3a;
+    --accent:#7c5cff;
+    --accent2:#ff5c8a;
+    --card:#171b32;
+    --text:#eef0fb;
+    --muted:#9aa0c3;
+    --ok:#39d98a;
+    --err:#ff5c6c;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:var(--sans); line-height:1.5;
-    -webkit-font-smoothing:antialiased;
+    margin:0;
+    font-family:"Segoe UI","Pyidaungsu",system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 10% -10%, #26305c 0%, transparent 60%),
+               radial-gradient(1000px 500px at 110% 10%, #3a1f4d 0%, transparent 55%),
+               linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    min-height:100vh;
+    padding:32px 16px 60px;
   }
-  .stripes{
-    height:10px;
-    background:repeating-linear-gradient(-45deg, var(--amber) 0 14px, var(--amber-dim) 14px 28px);
-    opacity:.9;
+  .wrap{max-width:760px;margin:0 auto;}
+  header{text-align:center;margin-bottom:28px;}
+  header h1{
+    font-size:28px;margin:0 0 6px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  header{ padding:28px 24px 20px; border-bottom:1px solid var(--line); }
-  header h1{ margin:0 0 6px; font-size:24px; font-weight:700; }
-  header p{ margin:0; color:var(--text-dim); font-size:14px; max-width:640px; }
-  main{ max-width:880px; margin:0 auto; padding:24px 20px 80px; display:flex; flex-direction:column; gap:18px; }
-  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 20px; }
-  .panel h2{ margin:0 0 4px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
-  .panel .hint{ color:var(--text-dim); font-size:12.5px; margin:2px 0 14px; }
-  .drop-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media(max-width:640px){ .drop-row{ grid-template-columns:1fr; } }
-  .dropzone{
-    border:1.5px dashed var(--line); border-radius:8px; background:var(--panel-2);
-    padding:18px; text-align:center; cursor:pointer; transition:border-color .15s;
+  header p{color:var(--muted);margin:0;font-size:14px;}
+  .card{
+    background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:18px;
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
   }
-  .dropzone:hover{ border-color:var(--amber-dim); }
-  .dropzone.filled{ border-style:solid; border-color:var(--teal-dim); }
-  .dropzone input{ display:none; }
-  .dropzone .label{ font-weight:600; font-size:14px; }
-  .dropzone .sub{ font-size:12px; color:var(--text-dim); margin-top:4px; }
-  .dropzone .filename{ margin-top:8px; font-family:var(--mono); font-size:11.5px; color:var(--teal); word-break:break-all; }
-  canvas.wave{ width:100%; height:44px; display:block; border-radius:6px; margin-top:8px; background:#1B1710; }
-  .tc{ font-family:var(--mono); font-size:12px; color:var(--text-dim); }
-
-  .big-btn{
-    width:100%; padding:16px; border-radius:10px; border:none;
-    background:var(--amber); color:#1B1710; font-size:16px; font-weight:700;
-    cursor:pointer; transition:filter .15s;
+  .card h2{font-size:15px;margin:0 0 14px;color:var(--muted);font-weight:600;letter-spacing:.3px;}
+  .drop{
+    border:2px dashed rgba(255,255,255,0.15);
+    border-radius:14px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    transition:.2s;
+    position:relative;
   }
-  .big-btn:hover{ filter:brightness(1.07); }
-  .big-btn:disabled{ opacity:.4; cursor:not-allowed; filter:none; }
-
-  progress{ width:100%; height:9px; accent-color:var(--amber); border-radius:4px; margin-top:14px; }
-  .status{ font-size:13px; color:var(--text-dim); margin-top:10px; min-height:16px; }
-  .status.err{ color:var(--red); }
-  .status.ok{ color:var(--teal); }
-
-  a.download-link{
-    display:inline-block; margin-top:12px; background:var(--teal); color:#0F2624;
-    padding:11px 18px; border-radius:8px; font-weight:700; text-decoration:none; font-size:14px;
+  .drop:hover, .drop.dragover{border-color:var(--accent);background:rgba(124,92,255,0.09);}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .drop .icon{font-size:26px;margin-bottom:6px;pointer-events:none;}
+  .drop .fname{margin-top:8px;font-size:13px;color:var(--ok);word-break:break-all;pointer-events:none;}
+  .drop .hint{pointer-events:none;}
+  .row{display:flex;gap:16px;flex-wrap:wrap;}
+  .row > div{flex:1;min-width:220px;}
+  video, audio{width:100%;border-radius:10px;margin-top:10px;background:#000;}
+  canvas{width:100%;border-radius:10px;margin-top:10px;background:#000;display:block;}
+  button{
+    border:none;border-radius:12px;
+    padding:14px 20px;font-size:15px;font-weight:600;
+    cursor:pointer;color:#fff;width:100%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:.15s;
   }
-
-  details.advanced{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 20px 4px; }
-  details.advanced summary{ cursor:pointer; padding:12px 0; font-size:13.5px; font-weight:600; color:var(--text-dim); list-style:none; }
-  details.advanced summary::-webkit-details-marker{ display:none; }
-  details.advanced summary:before{ content:"▸ "; color:var(--amber); }
-  details.advanced[open] summary:before{ content:"▾ "; }
-  details.advanced .inner{ padding:4px 0 18px; border-top:1px solid var(--line); margin-top:2px; }
-
-  video{ width:100%; border-radius:8px; background:#000; display:block; margin-top:10px; }
-  .row{ display:flex; align-items:center; gap:10px; margin:12px 0; flex-wrap:wrap; }
-  .row label{ font-size:12.5px; color:var(--text-dim); min-width:82px; }
-  input[type=range]{
-    -webkit-appearance:none; appearance:none; height:4px; flex:1; min-width:120px;
-    background:var(--line); border-radius:2px; outline:none;
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button:not(:disabled):hover{filter:brightness(1.1);transform:translateY(-1px);}
+  .secondary{background:rgba(255,255,255,0.08);}
+  .progress-wrap{margin-top:14px;}
+  .bar{
+    height:10px;border-radius:6px;background:rgba(255,255,255,0.08);
+    overflow:hidden;
   }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
-    background:var(--amber); border:2px solid #1B1710; cursor:pointer; margin-top:-1px;
+  .bar > div{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .15s linear;
   }
-  .btn{
-    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
-    padding:7px 13px; border-radius:7px; font-size:12.5px; cursor:pointer; font-weight:600;
+  .status{font-size:13px;color:var(--muted);margin-top:8px;text-align:center;}
+  .status.err{color:var(--err);}
+  .status.ok{color:var(--ok);}
+  .note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;}
+  .hidden{display:none !important;}
+  a.download-btn{
+    display:block;text-align:center;text-decoration:none;
+    margin-top:10px;
   }
-  .btn:hover{ border-color:var(--amber-dim); }
-  .btn.teal{ background:var(--teal); color:#0F2624; border-color:var(--teal); }
-  .btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-  .offset-readout{
-    font-family:var(--mono); font-size:17px; color:var(--amber);
-    background:var(--panel-2); border:1px solid var(--line); border-radius:7px;
-    padding:5px 12px; min-width:96px; text-align:center;
+  .opt-row{
+    display:flex;align-items:center;gap:10px;
+    margin-top:14px;font-size:14px;color:var(--text);
+    background:rgba(255,255,255,0.04);
+    border-radius:10px;padding:12px 14px;
   }
-  .suggest-box{ margin-top:10px; padding:9px 11px; background:var(--panel-2); border:1px solid var(--line); border-radius:7px; font-size:12px; color:var(--text-dim); display:none; }
-  .suggest-box.show{ display:block; }
-  .suggest-box b{ color:var(--teal); }
-  .legend{ display:flex; gap:16px; font-size:11.5px; color:var(--text-dim); margin-top:6px; }
-  .legend span{ display:inline-flex; align-items:center; gap:5px; }
-  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .opt-row input{width:18px;height:18px;accent-color:var(--accent);}
+  .file-hint{font-size:12px;color:var(--muted);margin-top:6px;}
 </style>
 </head>
 <body>
-<div class="stripes"></div>
-<header>
-  <h1>Auto Recap — Video ပေါင်းစပ်ကိရိယာ</h1>
-  <p>မူရင်း Video နှင့် အသံဖိုင်ကို တင်ပါ — အသံကို အလိုအလျောက် ချိန်ညှိပြီး ပေါင်းစပ်ထားတဲ့ Video တစ်ခုတည်းအဖြစ် ထုတ်ပေးပါမယ်။ ဖိုင်များကို ဆာဗာသို့ မပို့ဘဲ ဘရောက်ဆာထဲတွင်သာ လုပ်ဆောင်ပါသည်။</p>
-</header>
+<div class="wrap">
+  <header>
+    <h1>🎬 Video + Audio ပေါင်းစပ်ကိရိယာ</h1>
+    <p>ဗီဒီယိုတင်ပြီး အသံဖိုင်ထည့်လိုက်ရုံနဲ့ ဗီဒီယိုအသစ်ကို Auto ထုတ်ပေးပါမည်</p>
+  </header>
 
-<main>
-
-  <section class="panel">
-    <h2>ဖိုင် ၂ ခု တင်ပါ</h2>
-    <div class="hint">မူရင်း Video ဖိုင်နှင့် ထည့်လိုသော အသံဖိုင် (voice-over / soundtrack) ကို ရွေးချယ်ပါ။</div>
-    <div class="drop-row">
-      <label class="dropzone" id="dzVideo" for="videoInput">
-        <div class="label">🎬 မူရင်း Video ဖိုင်</div>
-        <div class="sub">MP4 / WebM / MOV — နှိပ်၍ ရွေးပါ</div>
-        <div class="filename" id="videoFileName"></div>
-        <canvas class="wave" id="videoWave" style="display:none"></canvas>
-        <input type="file" id="videoInput" accept="video/*,.mp4,.mov,.webm,.mkv,.avi">
-      </label>
-      <label class="dropzone" id="dzAudio" for="audioInput">
-        <div class="label">🎙️ အသံဖိုင်</div>
-        <div class="sub">MP3 / WAV / M4A — နှိပ်၍ ရွေးပါ</div>
-        <div class="filename" id="audioFileName"></div>
-        <div class="tc" id="audioAnalyzeStatus" style="margin-top:4px;"></div>
-        <canvas class="wave" id="audioWave" style="display:none"></canvas>
-        <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.wma">
-      </label>
+  <div class="card">
+    <h2>① ဗီဒီယိုနှင့် အသံဖိုင်ရွေးပါ</h2>
+    <div class="row">
+      <div>
+        <div class="drop" id="videoDrop">
+          <div class="icon">📹</div>
+          <div class="hint">ဗီဒီယိုဖိုင် ရွေးပါ (သို့) ဆွဲချထည့်ပါ</div>
+          <input type="file" id="videoInput" accept="video/*">
+          <div class="fname" id="videoName"></div>
+        </div>
+        <div class="file-hint">mp4, mov, webm, mkv စသည်</div>
+        <video id="videoPreview" class="hidden" controls muted></video>
+      </div>
+      <div>
+        <div class="drop" id="audioDrop">
+          <div class="icon">🎵</div>
+          <div class="hint">အသံဖိုင် ရွေးပါ (သို့) ဆွဲချထည့်ပါ</div>
+          <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.wma">
+          <div class="fname" id="audioName"></div>
+        </div>
+        <div class="file-hint">mp3, wav, m4a, aac, ogg, flac စသည်</div>
+        <audio id="audioPreview" class="hidden" controls></audio>
+      </div>
     </div>
-    <div class="legend">
-      <span><i class="dot" style="background:var(--amber)"></i> Video ၏ မူရင်းအသံလှိုင်း</span>
-      <span><i class="dot" style="background:var(--teal)"></i> တင်လိုက်သော အသံဖိုင်လှိုင်း</span>
+  </div>
+
+  <div class="card">
+    <h2>② ထုတ်လုပ်ခြင်း</h2>
+    <div class="opt-row">
+      <input type="checkbox" id="loopToggle" checked>
+      <label for="loopToggle">အသံဖိုင် တိုနေပါက Video အရှည်အထိ Loop လုပ်မည်</label>
     </div>
-  </section>
-
-  <section class="panel">
-    <h2>Auto ပေါင်းစပ်ပြီး ထုတ်ရန်</h2>
-    <div class="hint">ဒီခလုတ်တစ်ခုတည်း နှိပ်ရုံနှင့် — အသံကို အလိုအလျောက် အချိန်ကိုက်ညှိ၍ Video တစ်ခုလုံးကို အသံအသစ်နှင့် ပေါင်းစပ်ထုတ်ပေးပါမယ်။</div>
-    <button class="big-btn" id="btnAutoCombine" disabled>🎬 Auto ပေါင်းစပ်ပြီး Video ထုတ်ရန်</button>
-    <progress id="exportProgress" value="0" max="1" style="display:none"></progress>
-    <div class="status" id="exportStatus"></div>
-    <div id="downloadArea"></div>
-  </section>
-
-  <details class="advanced" id="advancedPanel">
-    <summary>အဆင့်မြင့် ညှိနှိုင်းမှု — အသံအချိန် လက်ဖြင့်ညှိရန် / Recap အပိုင်းအခြား ရွေးရန် (Optional)</summary>
-    <div class="inner">
-      <video id="previewVideo" muted controls></video>
-      <div class="tc" id="videoTC">00:00.00 / 00:00.00</div>
-
-      <div class="row" style="margin-top:14px">
-        <button class="btn teal" id="btnAutoSuggest">🧭 Offset အလိုအလျောက် အကြံပြုရန်</button>
-      </div>
-      <div class="suggest-box" id="suggestBox"></div>
-
-      <div class="row">
-        <label>Offset</label>
-        <input type="range" id="offsetSlider" min="-20" max="20" step="0.05" value="0">
-        <div class="offset-readout"><span id="offsetVal">0.00</span>s</div>
-      </div>
-      <div class="btn-row">
-        <button class="btn" data-nudge="-1">−1.0s</button>
-        <button class="btn" data-nudge="-0.1">−0.1s</button>
-        <button class="btn" data-nudge="-0.02">−0.02s</button>
-        <button class="btn" data-nudge="0.02">+0.02s</button>
-        <button class="btn" data-nudge="0.1">+0.1s</button>
-        <button class="btn" data-nudge="1">+1.0s</button>
-      </div>
-      <div class="btn-row">
-        <button class="btn" id="btnPlaySync">▶ ကိုက်ညီအောင် ပြန်ဖွင့်ကြည့်ရန်</button>
-        <button class="btn" id="btnStopSync">⏹ ရပ်ရန်</button>
-      </div>
-      <div class="status" id="syncStatus"></div>
-
-      <div class="row" style="margin-top:18px; border-top:1px solid var(--line); padding-top:14px;">
-        <label>Recap အစ</label>
-        <input type="range" id="trimStart" min="0" max="0" step="0.05" value="0">
-        <span class="tc" id="trimStartTC">00:00.00</span>
-      </div>
-      <div class="row">
-        <label>Recap အဆုံး</label>
-        <input type="range" id="trimEnd" min="0" max="0" step="0.05" value="0">
-        <span class="tc" id="trimEndTC">00:00.00</span>
-      </div>
-      <div class="tc" id="trimDurationTC"></div>
+    <button id="generateBtn" disabled style="margin-top:14px;">▶️ ဗီဒီယို ထုတ်လုပ်မည်</button>
+    <div class="progress-wrap hidden" id="progressWrap">
+      <div class="bar"><div id="progressBar"></div></div>
+      <div class="status" id="statusText">စောင့်ဆိုင်းနေသည်...</div>
     </div>
-  </details>
+    <canvas id="workCanvas" class="hidden"></canvas>
+    <div class="note">
+      ⚠️ ဗီဒီယို အရှည်နှင့် တူညီသောအချိန် ကြာမြင့်ပါမည် (Real-time recording)။
+      Browser tab ကို ပိတ်လိုက်ပါက ရပ်သွားပါမည်။ Chrome / Edge browser သုံးရန် အကြံပြုပါသည်။
+      ရလဒ်ဖိုင်မှာ .webm format ဖြစ်ပါမည်။
+    </div>
+  </div>
 
-</main>
+  <div class="card hidden" id="resultCard">
+    <h2>③ ရလဒ် ဗီဒီယို</h2>
+    <video id="resultVideo" controls></video>
+    <a id="downloadLink" class="download-btn" download="merged_video.webm">
+      <button type="button">⬇️ ဗီဒီယို ဒေါင်းလုဒ်ဆွဲမည်</button>
+    </a>
+    <button class="secondary" id="resetBtn" style="margin-top:10px;">🔄 အသစ်ပြန်စမည်</button>
+  </div>
+</div>
 
 <script>
 (function(){
-  const $ = (id) => document.getElementById(id);
+  const videoInput = document.getElementById('videoInput');
+  const audioInput = document.getElementById('audioInput');
+  const videoDrop = document.getElementById('videoDrop');
+  const audioDrop = document.getElementById('audioDrop');
+  const videoName = document.getElementById('videoName');
+  const audioName = document.getElementById('audioName');
+  const videoPreview = document.getElementById('videoPreview');
+  const audioPreview = document.getElementById('audioPreview');
+  const generateBtn = document.getElementById('generateBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const statusText = document.getElementById('statusText');
+  const workCanvas = document.getElementById('workCanvas');
+  const resultCard = document.getElementById('resultCard');
+  const resultVideo = document.getElementById('resultVideo');
+  const downloadLink = document.getElementById('downloadLink');
+  const resetBtn = document.getElementById('resetBtn');
+  const loopToggle = document.getElementById('loopToggle');
 
-  let videoFile=null, audioFile=null;
-  let videoBuffer=null, audioBuffer=null;
-  let offset = 0;
-  let videoURL=null, audioURL=null;
+  let videoFile = null, audioFile = null;
+  let audioCtx = null;
 
-  const previewVideo = $('previewVideo');
-  const previewAudio = new Audio();
-  previewAudio.crossOrigin = 'anonymous';
-
-  function fmt(t){
-    if(!isFinite(t) || t<0) t=0;
-    const m = Math.floor(t/60);
-    const s = t - m*60;
-    return String(m).padStart(2,'0')+':'+s.toFixed(2).padStart(5,'0');
+  function checkReady(){
+    generateBtn.disabled = !(videoFile && audioFile);
   }
 
-  function wireDropzone(dzId, inputId, onFile){
-    const dz = $(dzId), input = $(inputId);
-    // dz is a <label for=...> so tapping it natively opens the picker — no JS click() needed (avoids an iOS Safari/Chrome bug where display:none inputs don't open via .click()).
-    dz.addEventListener('dragover', e=>{e.preventDefault(); dz.style.borderColor='var(--amber-dim)';});
-    dz.addEventListener('dragleave', ()=>{dz.style.borderColor='';});
-    dz.addEventListener('drop', e=>{
-      e.preventDefault(); dz.style.borderColor='';
-      if(e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]);
-    });
-    input.addEventListener('change', e=>{
-      if(e.target.files[0]) onFile(e.target.files[0]);
-      e.target.value = '';
-    });
+  function handleVideoFile(f){
+    if(!f) return;
+    if(!f.type.startsWith('video/')){
+      setStatus('⚠️ ဗီဒီယိုဖိုင် (video) မျိုးကိုသာ ရွေးပေးပါ', 'err');
+      return;
+    }
+    videoFile = f;
+    videoName.textContent = f.name;
+    videoPreview.src = URL.createObjectURL(f);
+    videoPreview.classList.remove('hidden');
+    checkReady();
   }
 
-  wireDropzone('dzVideo','videoInput', handleVideoFile);
-  wireDropzone('dzAudio','audioInput', handleAudioFile);
+  function handleAudioFile(f){
+    if(!f) return;
+    audioFile = f;
+    audioName.textContent = f.name;
+    audioPreview.src = URL.createObjectURL(f);
+    audioPreview.classList.remove('hidden');
+    checkReady();
+  }
 
-  async function handleVideoFile(file){
-    videoFile = file;
-    $('dzVideo').classList.add('filled');
-    $('videoFileName').textContent = '✓ ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
-    if(videoURL) URL.revokeObjectURL(videoURL);
-    videoURL = URL.createObjectURL(file);
-    previewVideo.src = videoURL;
-    try{
-      await new Promise((res, rej)=>{
-        previewVideo.onloadedmetadata = res;
-        previewVideo.onerror = ()=>rej(new Error('ဤ Video ဖိုင်ကို ဘရောက်ဆာက ဖွင့်၍မရပါ (format မကိုက်ညီခြင်း ဖြစ်နိုင်ပါသည်)'));
+  // ---- click-to-select ----
+  videoInput.addEventListener('change', e => handleVideoFile(e.target.files[0]));
+  audioInput.addEventListener('change', e => handleAudioFile(e.target.files[0]));
+
+  // ---- drag & drop support ----
+  function wireDrop(zone, onFile){
+    ['dragenter','dragover'].forEach(evt => {
+      zone.addEventListener(evt, e => {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.add('dragover');
       });
-      setupTrimRange(previewVideo.duration);
-      maybeReveal();
-      analyzeTrack(file, 'videoWave', 'amber', null).then(buf=>{ videoBuffer = buf; });
-    }catch(err){
-      $('videoFileName').textContent = '✗ ' + file.name + ' — ' + err.message;
-    }
-  }
-
-  async function handleAudioFile(file){
-    audioFile = file;
-    $('dzAudio').classList.add('filled');
-    $('audioFileName').textContent = '✓ ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
-    $('audioAnalyzeStatus').textContent = 'အသံလှိုင်းကို စစ်ဆေးနေသည်…';
-    if(audioURL) URL.revokeObjectURL(audioURL);
-    audioURL = URL.createObjectURL(file);
-    previewAudio.src = audioURL;
-    maybeReveal();
-    analyzeTrack(file, 'audioWave', 'teal', 'audioAnalyzeStatus').then(buf=>{ audioBuffer = buf; });
-  }
-
-  function maybeReveal(){
-    $('btnAutoCombine').disabled = !(videoFile && audioFile);
-  }
-
-  async function analyzeTrack(file, canvasId, colorVar, statusId){
-    const canvas = $(canvasId);
-    canvas.style.display='block';
-    try{
-      const arrBuf = await file.arrayBuffer();
-      const ctx = new (window.AudioContext||window.webkitAudioContext)();
-      const decoded = await ctx.decodeAudioData(arrBuf);
-      drawWave(canvas, decoded, colorVar);
-      ctx.close();
-      if(statusId) $(statusId).textContent = `အသံအရှည် — ${fmt(decoded.duration)}`;
-      return decoded;
-    }catch(err){
-      canvas.style.display='none';
-      console.warn('decode failed for', canvasId, err);
-      if(statusId) $(statusId).textContent = 'သတိပြုရန်: ဤဖိုင်ဖော်မတ်ကို auto-sync အတွက် ဖတ်၍မရပါ (ပေါင်းစပ်ခြင်းကတော့ ပုံမှန်အလုပ်လုပ်ပါမည်၊ offset=0 ဖြင့် ပေါင်းပေးပါမည်)။');
-      return null;
-    }
-  }
-
-  function drawWave(canvas, audioBuffer, colorVar){
-    const dpr = window.devicePixelRatio||1;
-    const w = canvas.clientWidth||300, h = 44;
-    canvas.width = w*dpr; canvas.height = h*dpr;
-    const c = canvas.getContext('2d');
-    c.scale(dpr,dpr);
-    const data = audioBuffer.getChannelData(0);
-    const step = Math.max(1, Math.floor(data.length / w));
-    c.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(colorVar==='amber'?'--amber':'--teal');
-    c.globalAlpha = 0.85;
-    for(let x=0; x<w; x++){
-      let min=1, max=-1;
-      const start = x*step;
-      for(let i=0;i<step;i++){
-        const v = data[start+i]||0;
-        if(v<min) min=v;
-        if(v>max) max=v;
-      }
-      const y1 = (1+min)*h/2, y2=(1+max)*h/2;
-      c.fillRect(x, Math.min(y1,y2), 1, Math.max(2,Math.abs(y2-y1)));
-    }
-  }
-
-  function envelope(audioBuffer, hz){
-    const data = audioBuffer.getChannelData(0);
-    const sr = audioBuffer.sampleRate;
-    const winSize = Math.floor(sr/hz);
-    const n = Math.floor(data.length/winSize);
-    const out = new Float32Array(n);
-    for(let i=0;i<n;i++){
-      let sum=0;
-      const start=i*winSize;
-      for(let j=0;j<winSize;j++){ const v = data[start+j]||0; sum += v*v; }
-      out[i] = Math.sqrt(sum/winSize);
-    }
-    let mean=0; for(const v of out) mean+=v; mean/=out.length||1;
-    let std=0; for(const v of out) std += (v-mean)*(v-mean); std = Math.sqrt(std/(out.length||1))||1;
-    for(let i=0;i<out.length;i++) out[i] = (out[i]-mean)/std;
-    return {data: out, hz};
-  }
-
-  function crossCorrelate(envV, envA, maxLagSeconds){
-    const hz = envV.hz;
-    const maxLagSamples = Math.floor(maxLagSeconds*hz);
-    let best = {score:-Infinity, lag:0};
-    const V = envV.data, A = envA.data;
-    for(let lag=-maxLagSamples; lag<=maxLagSamples; lag+=1){
-      let sum=0, count=0;
-      const startI = Math.max(0, lag);
-      const endI = Math.min(V.length, A.length+lag);
-      for(let i=startI; i<endI; i+=3){
-        sum += V[i]*A[i-lag];
-        count++;
-      }
-      if(count<10) continue;
-      const score = sum/count;
-      if(score>best.score) best={score, lag};
-    }
-    return { offsetSeconds: best.lag/hz, score: best.score };
-  }
-
-  function computeAutoOffset(){
-    if(!videoBuffer || !audioBuffer) return {offsetSeconds:0, score:0, available:false};
-    const envV = envelope(videoBuffer, 50);
-    const envA = envelope(audioBuffer, 50);
-    const maxLag = Math.min(20, Math.max(videoBuffer.duration, audioBuffer.duration));
-    const result = crossCorrelate(envV, envA, maxLag);
-    return {offsetSeconds: Math.max(-20, Math.min(20, result.offsetSeconds)), score: result.score, available:true};
-  }
-
-  $('btnAutoSuggest').addEventListener('click', ()=>{
-    const box = $('suggestBox');
-    box.classList.add('show');
-    if(!videoBuffer || !audioBuffer){
-      box.innerHTML = 'အသံလှိုင်းကို ခွဲခြမ်းစိတ်ဖြာ၍ မရသေးပါ — Slider ဖြင့် ကိုယ်တိုင်ချိန်ညှိပါ။';
-      return;
-    }
-    box.innerHTML = 'တွက်ချက်နေသည်…';
-    setTimeout(()=>{
-      const r = computeAutoOffset();
-      offset = r.offsetSeconds;
-      $('offsetSlider').value = offset.toFixed(2);
-      $('offsetVal').textContent = offset.toFixed(2);
-      const confidence = r.score>0.35 ? 'ယုံကြည်ရသင့်သော' : (r.score>0.12 ? 'အလယ်အလတ်' : 'အားနည်းသော');
-      box.innerHTML = `အကြံပြုထားသော offset — <b>${offset.toFixed(2)}s</b> (${confidence} confidence: ${r.score.toFixed(2)})`;
-    }, 30);
-  });
-
-  $('offsetSlider').addEventListener('input', e=>{
-    offset = parseFloat(e.target.value);
-    $('offsetVal').textContent = offset.toFixed(2);
-  });
-  document.querySelectorAll('.btn[data-nudge]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      offset += parseFloat(btn.dataset.nudge);
-      offset = Math.max(-20, Math.min(20, offset));
-      $('offsetSlider').value = offset.toFixed(2);
-      $('offsetVal').textContent = offset.toFixed(2);
     });
-  });
-
-  let syncing = false;
-  function syncLoop(){
-    if(!syncing) return;
-    const target = previewVideo.currentTime + offset;
-    if(Math.abs(previewAudio.currentTime - target) > 0.15){
-      previewAudio.currentTime = Math.max(0, target);
-    }
-    $('videoTC').textContent = `${fmt(previewVideo.currentTime)} / ${fmt(previewVideo.duration)}`;
-    if(previewVideo.paused || previewVideo.ended){ syncing=false; previewAudio.pause(); return; }
-    requestAnimationFrame(syncLoop);
-  }
-
-  $('btnPlaySync').addEventListener('click', async ()=>{
-    if(!videoFile || !audioFile){
-      $('syncStatus').textContent = 'ဖိုင်နှစ်ခုလုံး ဦးစွာ တင်ပါ။';
-      $('syncStatus').className='status err';
-      return;
-    }
-    previewVideo.muted = true;
-    previewAudio.currentTime = Math.max(0, previewVideo.currentTime + offset);
-    try{
-      await previewAudio.play();
-      await previewVideo.play();
-      syncing = true;
-      $('syncStatus').textContent = 'ကိုက်ညီအောင် ဖွင့်နေသည်…';
-      $('syncStatus').className='status ok';
-      syncLoop();
-    }catch(err){
-      $('syncStatus').textContent = 'ဖွင့်၍မရပါ — ▶ ခလုတ်ကို ထပ်နှိပ်ကြည့်ပါ။';
-      $('syncStatus').className='status err';
-    }
-  });
-  $('btnStopSync').addEventListener('click', ()=>{
-    syncing=false;
-    previewVideo.pause(); previewAudio.pause();
-    $('syncStatus').textContent='ရပ်လိုက်ပါပြီ။';
-    $('syncStatus').className='status';
-  });
-  previewVideo.addEventListener('timeupdate', ()=>{
-    if(!syncing) $('videoTC').textContent = `${fmt(previewVideo.currentTime)} / ${fmt(previewVideo.duration||0)}`;
-  });
-
-  function setupTrimRange(duration){
-    $('trimStart').max = duration; $('trimEnd').max = duration;
-    $('trimStart').value = 0; $('trimEnd').value = duration;
-    updateTrimTC();
-  }
-  function updateTrimTC(){
-    let s = parseFloat($('trimStart').value), e = parseFloat($('trimEnd').value);
-    if(s>e){ [s,e] = [e,s]; }
-    $('trimStartTC').textContent = fmt(s);
-    $('trimEndTC').textContent = fmt(e);
-    $('trimDurationTC').textContent = `Recap အရှည် — ${fmt(e-s)}`;
-  }
-  $('trimStart').addEventListener('input', updateTrimTC);
-  $('trimEnd').addEventListener('input', updateTrimTC);
-
-  async function runExport(){
-    const statusEl = $('exportStatus');
-    const progEl = $('exportProgress');
-    const dlArea = $('downloadArea');
-    dlArea.innerHTML='';
-
-    if(!videoFile || !audioFile){
-      statusEl.textContent='ဖိုင်နှစ်ခုလုံးကို ဦးစွာ တင်ပါ။'; statusEl.className='status err'; return;
-    }
-    let start = parseFloat($('trimStart').value), end = parseFloat($('trimEnd').value);
-    if(!end || end<=start) end = previewVideo.duration || end;
-    if(start>end) [start,end]=[end,start];
-
-    if(!previewVideo.captureStream){
-      statusEl.textContent='ဤဘရောက်ဆာသည် ဤလုပ်ငန်းစဉ်ကို ပံ့ပိုးမထားပါ (Chrome / Edge သုံးကြည့်ပါ)။';
-      statusEl.className='status err'; return;
-    }
-
-    $('btnAutoCombine').disabled = true;
-    statusEl.textContent = 'အသံ အလိုအလျောက် ချိန်ညှိနေသည်…'; statusEl.className='status';
-
-    if(videoBuffer && audioBuffer){
-      const r = computeAutoOffset();
-      offset = r.offsetSeconds;
-      $('offsetSlider').value = offset.toFixed(2);
-      $('offsetVal').textContent = offset.toFixed(2);
-    }
-
-    progEl.style.display='block'; progEl.value=0;
-    statusEl.textContent = 'ပြင်ဆင်နေသည်…';
-
-    try{
-      previewVideo.muted = true;
-      const videoStream = previewVideo.captureStream();
-      const videoTrack = videoStream.getVideoTracks()[0];
-
-      const actx = new (window.AudioContext||window.webkitAudioContext)();
-      const srcNode = actx.createMediaElementSource(previewAudio);
-      const dest = actx.createMediaStreamDestination();
-      srcNode.connect(dest);
-      const audioTrack = dest.stream.getAudioTracks()[0];
-
-      const combined = new MediaStream([videoTrack, audioTrack]);
-
-      let mimeType = 'video/webm;codecs=vp9,opus';
-      if(!MediaRecorder.isTypeSupported(mimeType)) mimeType='video/webm;codecs=vp8,opus';
-      if(!MediaRecorder.isTypeSupported(mimeType)) mimeType='video/webm';
-
-      const recorder = new MediaRecorder(combined, {mimeType});
-      const chunks = [];
-      recorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
-      const finished = new Promise(resolve=>{ recorder.onstop = resolve; });
-
-      previewVideo.currentTime = start;
-      previewAudio.currentTime = Math.max(0, start + offset);
-      await previewVideo.play();
-      await previewAudio.play();
-      recorder.start(250);
-      statusEl.textContent = 'Video ထုတ်နေသည်… (Video ကြည့်ရှုနေသလို အချိန်ယူပါမည်)';
-
-      function tick(){
-        const t = previewVideo.currentTime;
-        progEl.value = Math.min(1, Math.max(0, (t-start)/(end-start || 1)));
-        const target = t + offset;
-        if(Math.abs(previewAudio.currentTime - target) > 0.15){
-          previewAudio.currentTime = Math.max(0, target);
-        }
-        if(t < end && !previewVideo.paused && !previewVideo.ended){
-          requestAnimationFrame(tick);
-        }else{
-          previewVideo.pause();
-          previewAudio.pause();
-          recorder.stop();
-        }
+    ['dragleave','dragend'].forEach(evt => {
+      zone.addEventListener(evt, e => {
+        e.preventDefault(); e.stopPropagation();
+        zone.classList.remove('dragover');
+      });
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.classList.remove('dragover');
+      const dt = e.dataTransfer;
+      if(dt && dt.files && dt.files.length > 0){
+        onFile(dt.files[0]);
       }
-      requestAnimationFrame(tick);
+    });
+  }
+  wireDrop(videoDrop, handleVideoFile);
+  wireDrop(audioDrop, handleAudioFile);
 
-      await finished;
-      actx.close();
+  function setStatus(msg, type){
+    statusText.textContent = msg;
+    statusText.className = 'status' + (type ? ' ' + type : '');
+  }
 
-      const blob = new Blob(chunks, {type:'video/webm'});
+  function pickMimeType(){
+    const options = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+    for(const o of options){
+      if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(o)) return o;
+    }
+    return '';
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    if(!videoFile || !audioFile) return;
+    generateBtn.disabled = true;
+    progressWrap.classList.remove('hidden');
+    workCanvas.classList.remove('hidden');
+    resultCard.classList.add('hidden');
+    setStatus('ပြင်ဆင်နေသည်...', '');
+    progressBar.style.width = '0%';
+
+    try{
+      videoPreview.pause();
+      audioPreview.pause();
+      videoPreview.currentTime = 0;
+      audioPreview.currentTime = 0;
+
+      await new Promise((resolve, reject) => {
+        if(videoPreview.readyState >= 1) return resolve();
+        videoPreview.onloadedmetadata = resolve;
+        videoPreview.onerror = () => reject(new Error('ဗီဒီယိုဖိုင် ဖတ်၍မရပါ'));
+      });
+
+      let vw = videoPreview.videoWidth || 640;
+      let vh = videoPreview.videoHeight || 360;
+      const maxW = 1280;
+      if(vw > maxW){
+        vh = Math.round(vh * (maxW / vw));
+        vw = maxW;
+      }
+      workCanvas.width = vw;
+      workCanvas.height = vh;
+      const ctx = workCanvas.getContext('2d');
+
+      videoPreview.muted = true; // only the uploaded audio track will be used
+      audioPreview.loop = !!loopToggle.checked; // auto-loop audio to match video length
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaElementSource(audioPreview);
+      const dest = audioCtx.createMediaStreamDestination();
+      source.connect(dest);
+      source.connect(audioCtx.destination); // so you can hear it while it renders
+
+      const canvasStream = workCanvas.captureStream(30);
+      const combinedStream = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...dest.stream.getAudioTracks()
+      ]);
+
+      const mimeType = pickMimeType();
+      const recorder = new MediaRecorder(combinedStream, mimeType ? {mimeType} : undefined);
+      const chunks = [];
+      recorder.ondataavailable = e => { if(e.data && e.data.size > 0) chunks.push(e.data); };
+
+      const recordingDone = new Promise(resolve => {
+        recorder.onstop = () => resolve();
+      });
+
+      let stopped = false;
+      function stopAll(){
+        if(stopped) return;
+        stopped = true;
+        try{ videoPreview.pause(); }catch(e){}
+        try{ audioPreview.pause(); }catch(e){}
+        if(recorder.state !== 'inactive') recorder.stop();
+      }
+
+      videoPreview.onended = stopAll;
+
+      let raf;
+      function drawFrame(){
+        if(stopped) return;
+        ctx.drawImage(videoPreview, 0, 0, workCanvas.width, workCanvas.height);
+        const dur = videoPreview.duration || 1;
+        const pct = Math.min(100, (videoPreview.currentTime / dur) * 100);
+        progressBar.style.width = pct.toFixed(1) + '%';
+        setStatus('ထုတ်လုပ်နေသည်... ' + pct.toFixed(0) + '%', '');
+        raf = requestAnimationFrame(drawFrame);
+      }
+
+      recorder.start(250);
+      await Promise.all([
+        videoPreview.play(),
+        audioPreview.play()
+      ]);
+      drawFrame();
+
+      await recordingDone;
+      cancelAnimationFrame(raf);
+
+      const blob = new Blob(chunks, {type: mimeType ? mimeType.split(';')[0] : 'video/webm'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'auto-recap-output.webm';
-      a.className='download-link';
-      a.textContent = '⬇ ပေါင်းစပ်ထားသော Video ဒေါင်းလုဒ်လုပ်ရန် (.webm)';
-      dlArea.appendChild(a);
-
-      statusEl.textContent = 'ပြီးစီးပါပြီ! အောက်ပါလင့်ခ်မှ ဒေါင်းလုဒ်လုပ်ပါ။';
-      statusEl.className='status ok';
-      progEl.value = 1;
+      resultVideo.src = url;
+      downloadLink.href = url;
+      resultCard.classList.remove('hidden');
+      setStatus('✅ ပြီးစီးပါပြီ!', 'ok');
+      progressBar.style.width = '100%';
+      workCanvas.classList.add('hidden');
     }catch(err){
       console.error(err);
-      statusEl.textContent = 'Export လုပ်ငန်းစဉ် မအောင်မြင်ပါ — ' + (err.message||err);
-      statusEl.className='status err';
+      setStatus('❌ အမှားရှိသည်: ' + err.message, 'err');
     }finally{
-      $('btnAutoCombine').disabled = false;
+      audioPreview.loop = false;
+      generateBtn.disabled = false;
+      if(audioCtx){ try{ audioCtx.close(); }catch(e){} }
     }
-  }
+  });
 
-  $('btnAutoCombine').addEventListener('click', runExport);
-
+  resetBtn.addEventListener('click', () => {
+    location.reload();
+  });
 })();
 </script>
 </body>
